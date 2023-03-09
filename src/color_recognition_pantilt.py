@@ -125,5 +125,5 @@ if __name__=='__main__':
     pub2 = rospy.Publisher("Detected_Object_Position", Point, queue_size=10)
     
     rospy.Subscriber('camera/color/image_raw', Image, db.object_detect)
-    
+
     rospy.spin()
