@@ -12,8 +12,10 @@ from cv_bridge import CvBridge
 import sys
 
 MIN_IMAGE_SIZE = 40
-CAMERA_CENTER_X = 160
-CAMERA_CENTER_Y = 120
+#CAMERA_CENTER_X = 160
+#CAMERA_CENTER_Y = 120
+CAMERA_CENTER_X = 640
+CAMERA_CENTER_Y = 400
 
 class detect_object:
 

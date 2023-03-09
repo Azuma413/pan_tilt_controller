@@ -4,6 +4,7 @@ import numpy as np
 from numpy import sin, cos, tan
 from geometry_msgs.msg import Point
 from std_msgs.msg import float
+import pyrealsense2 as rs
 
 #画像検出により目標の画像上での位置を求める(u, v)
 #画像上での位置の深度情報を求める depth
@@ -23,23 +24,6 @@ from std_msgs.msg import float
 #出力は以下です。
 
 #実際の空間（ワールド座標系）における座標 = (x', y', z')
-
-
-def convert_uvz_to_xyz(u, v, z, R, t, K):
-    K_inv = np.linalg.inv(K)
-
-    # in screen coord
-    cs = np.asarray([u, v, 1])
-    cs_ = cs * z
-
-    # in camera coord
-    cc = np.dot(K_inv, cs_)
-
-    # in world coord
-    cw = np.dot(R, cc) + t
-
-    return cw
-
 def calc_R(pitch, yaw, roll):
     a = np.radians(pitch)
     b = np.radians(yaw)
@@ -84,15 +68,42 @@ def calc_K(fov_x, pixel_w, pixel_h, cx=None, cy=None):
 
     return K
 
+def convert_uvz_to_xyz(u, v, z, R, t, K):
+    K_inv = np.linalg.inv(K)
+
+    # in screen coord
+    cs = np.asarray([u, v, 1])
+    cs_ = cs * z
+
+    # in camera coord
+    cc = np.dot(K_inv, cs_)
+
+    # in world coord
+    cw = np.dot(R, cc) + t
+
+    return cw
+
+def callback1(data):
+    global screen_coord
+    screen_coord = [data.x, data.y]
+
 if __name__ == "__main__":
     rospy.init_node('convert_sc2wc')
     pub = rospy.Publisher('object_coord', Point, queue_size=10)
-    sub1 = rospy.Subscriber('Detected_Object_Position', Point, queue_size=10)
-    sub2 = rospy.Subscriber('Object_Depth', float, queue_size=10)
+    sub1 = rospy.Subscriber('Detected_Object_Position', Point, callback1, queue_size=10)
+    conf = rs.config()
+    # RGB
+    conf.enable_stream(rs.stream.color, 1280, 720, rs.format.bgr8, 30)
+    # 距離
+    conf.enable_stream(rs.stream.depth, 1280, 720, rs.format.z16, 30)
+    # stream開始
+    pipe = rs.pipeline()
+    profile = pipe.start(conf)
+
     # カメラの座標
-    cam_coord = [392, 336, 234]
+    cam_coord = [0, 0, 40]
     # カメラの回転角度（カメラ座標におけるx軸、y軸、z軸での回転）
-    cam_rot = [326, 41, 0]
+    cam_rot = [90, 0, 0]
     # カメラの視野角（水平方向）
     fov = 86
     # スクリーンの画素数（横）
@@ -105,11 +116,14 @@ if __name__ == "__main__":
     t = cam_coord
     R = calc_R(*cam_rot)
     K = calc_K(*cam_info)
-
-    cs = [0, 0]
+    screen_coord = [0, 0]
     depth = 0
-    cw = convert_uvz_to_xyz(cs[0], cs[1], depth, R, t, K)
     try:
+        while not rospy.is_shutdown():
+            frames = pipe.wait_for_frames()
+            depth_frame = frames.get_depth_frame()
+            depth = depth_frame.get_distance(screen_coord[0],screen_coord[1])
+            cw = convert_uvz_to_xyz(screen_coord[0], screen_coord[1], depth, R, t, K)
         rospy.spin()
     except KeyboardInterrupt:
         pass
