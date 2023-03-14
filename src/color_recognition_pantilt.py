@@ -93,7 +93,7 @@ class detect_object:
     def show_detected_object(self, image, rects):
         if len(rects) > 0:
             rect = max(rects, key=(lambda x: x[2] * x[3]))
-            print(rect)
+            #print(rect)
             marker_position = Point()
             for rect in rects:
                 if self.color_type == 'RED':
@@ -106,6 +106,7 @@ class detect_object:
                 marker_position.x = rect[0] + rect[2]/2 - CAMERA_CENTER_X
                 marker_position.y = -(rect[1] + rect[3]/2 - CAMERA_CENTER_Y)
                 marker_position.z = 0
+                print("pan:{}\ntilt{}".format(marker_position.y, marker_position.x))
                 pub2.publish(marker_position)
 
 #        cv2.imshow("Detected Objects", image)
