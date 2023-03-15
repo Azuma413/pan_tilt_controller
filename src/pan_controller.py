@@ -2,9 +2,6 @@
 # -*- coding: utf-8 -*-
 import rospy
 import math
-from dynamixel_workbench_msgs.msg import DynamixelStateList
-from trajectory_msgs.msg import JointTrajectory
-from trajectory_msgs.msg import JointTrajectoryPoint
 from geometry_msgs.msg import Point
 from sensor_msgs.msg import JointState
 from geometry_msgs.msg import Twist
@@ -19,13 +16,6 @@ speed = 1
 pool_size = 50
 target_pan_pool = np.zeros((pool_size))
 target_tilt_pool = np.zeros((pool_size))
-    
-def sendRoverTwist():
-    rover_data = Twist()
-    rover_data.linear.x = 0.0
-    rover_data.linear.y = present_pos["pan"] * speed
-    rover_data.angular.z = present_pos["tilt"]
-    pub2.publish(rover_data)
 
 def callback1(data):
     global target_pos
@@ -42,6 +32,10 @@ def callback2(data):
     global present_pos
     present_pos["tilt"] = data.position[1]
     present_pos["pan"] = data.position[0]
+    sendGoalPos()
+    sendRoverTwist()
+
+def sendGoalPos():
     array = [0.0, 0.0]
     array[0] = present_pos["pan"] + target_pos["pan"]
     array[1] = present_pos["tilt"] + target_pos["tilt"]
@@ -50,6 +44,13 @@ def callback2(data):
     print("present:{}/{}\ntarget:{}/{}".format(present_pos["pan"]/3.14*180, present_pos["tilt"]/3.14*180, target_pos["pan"]/3.14*180, target_pos["tilt"]/3.14*180))
     pub1.publish(array_forpub)
     
+def sendRoverTwist():
+    rover_data = Twist()
+    rover_data.linear.x = 0.0
+    rover_data.linear.y = present_pos["pan"] * speed
+    rover_data.angular.z = present_pos["tilt"]
+    pub2.publish(rover_data)
+
 if __name__ == "__main__":
     present_pos = {"pan":0.0, "tilt":0.0}
     target_pos = {"pan":0.0, "tilt":0.0}
