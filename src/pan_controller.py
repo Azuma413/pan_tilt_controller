@@ -11,20 +11,20 @@ from geometry_msgs.msg import Twist
 from std_msgs.msg import Float32MultiArray
 import numpy as np
 
-vertical_NoP = 800 #vertical number of pixels
+vertical_NoP = 720 #vertical number of pixels
 vertical_AoV = 57 #vertical angle of view
 horizontal_NoP = 1280
 horizontal_AoV = 86
 speed = 1 
-pool_size = 100
+pool_size = 50
 target_pan_pool = np.zeros((pool_size))
 target_tilt_pool = np.zeros((pool_size))
     
 def sendRoverTwist():
     rover_data = Twist()
     rover_data.linear.x = 0.0
-    rover_data.linear.y = target_pos["pan"] * speed
-    rover_data.angular.z = target_pos["tilt"]
+    rover_data.linear.y = present_pos["pan"] * speed
+    rover_data.angular.z = present_pos["tilt"]
     pub2.publish(rover_data)
 
 def callback1(data):
@@ -35,8 +35,8 @@ def callback1(data):
     target_tilt_pool = np.append(target_tilt_pool, data.x)
     target_pan_pool = np.delete(target_pan_pool, 0)
     target_tilt_pool = np.delete(target_tilt_pool, 0)
-    target_pos["tilt"] = -math.radians(np.mean(target_tilt_pool) / horizontal_NoP * horizontal_AoV)
-    target_pos["pan"] = -math.radians(np.mean(target_pan_pool) / vertical_NoP * vertical_AoV)
+    target_pos["tilt"] = math.radians(np.mean(target_tilt_pool) / horizontal_NoP * horizontal_AoV)
+    target_pos["pan"] = math.radians(np.mean(target_pan_pool) / vertical_NoP * vertical_AoV)
 
 def callback2(data):
     global present_pos
@@ -55,8 +55,8 @@ if __name__ == "__main__":
     target_pos = {"pan":0.0, "tilt":0.0}
     rospy.init_node('pan_controller')
     pub1 = rospy.Publisher("goal_pos", Float32MultiArray, queue_size=1)
-    pub2 = rospy.Publisher("mouse_vel", Twist, queue_size=1)
-    sub1 = rospy.Subscriber("Detected_Object_Position", Point, callback1, queue_size=10)
+    pub2 = rospy.Publisher("rover_twist", Twist, queue_size=1)
+    sub1 = rospy.Subscriber("detected_marker_pos", Point, callback1, queue_size=10)
     sub2 = rospy.Subscriber("/dynamixel_workbench/joint_states", JointState, callback2, queue_size=10)
     try:
         rospy.spin()

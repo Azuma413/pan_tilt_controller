@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="pan_tilt_controller" name="pan_tilt_test" type="pan_tilt_test"/>
+  <node pkg="pan_tilt_controller" name="pan_controller" type="pan_controller.py"/>
+</launch>
