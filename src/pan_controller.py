@@ -31,10 +31,10 @@ def callback1(data):
     global target_pos
     global target_pan_pool
     global target_tilt_pool
-    np.append(target_pan_pool, data.y)
-    np.append(target_tilt_pool, data.x)
-    np.delete(target_pan_pool, 0)
-    np.delete(target_tilt_pool, 0)
+    target_pan_pool = np.append(target_pan_pool, data.y)
+    target_tilt_pool = np.append(target_tilt_pool, data.x)
+    target_pan_pool = np.delete(target_pan_pool, 0)
+    target_tilt_pool = np.delete(target_tilt_pool, 0)
     target_pos["tilt"] = math.radians(np.mean(target_tilt_pool) / horizontal_NoP * horizontal_AoV)
     target_pos["pan"] = math.radians(np.mean(target_pan_pool) / vertical_NoP * vertical_AoV)
 
