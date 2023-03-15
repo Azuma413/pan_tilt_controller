@@ -35,8 +35,8 @@ def callback1(data):
     target_tilt_pool = np.append(target_tilt_pool, data.x)
     target_pan_pool = np.delete(target_pan_pool, 0)
     target_tilt_pool = np.delete(target_tilt_pool, 0)
-    target_pos["tilt"] = math.radians(np.mean(target_tilt_pool) / horizontal_NoP * horizontal_AoV)
-    target_pos["pan"] = math.radians(np.mean(target_pan_pool) / vertical_NoP * vertical_AoV)
+    target_pos["tilt"] = -math.radians(np.mean(target_tilt_pool) / horizontal_NoP * horizontal_AoV)
+    target_pos["pan"] = -math.radians(np.mean(target_pan_pool) / vertical_NoP * vertical_AoV)
 
 def callback2(data):
     global present_pos
@@ -59,10 +59,6 @@ if __name__ == "__main__":
     sub1 = rospy.Subscriber("Detected_Object_Position", Point, callback1, queue_size=10)
     sub2 = rospy.Subscriber("/dynamixel_workbench/joint_states", JointState, callback2, queue_size=10)
     try:
-        #while not rospy.is_shutdown():
-        #    #sendPanTiltPos()
-        #    sendRoverTwist()
-        #    rospy.Rate(50).sleep()
         rospy.spin()
     except KeyboardInterrupt:
         pass
